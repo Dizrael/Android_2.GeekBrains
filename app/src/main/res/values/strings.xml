@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MsgToDscts</string>
+    <string name="app_name">Android_2</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Pavel Shahov</string>
@@ -13,4 +13,14 @@
     <string name="menu_about">About Us</string>
     <string name="menu_contact">Contact with us</string>
     <string name="communicate">Communicate</string>
+    <string name="about_developer">My name is Pavel Shahov, I\'m a young developer from Moscow :)</string>
+    <string name="about_developer_2">Here you can see my first Android app - Weather Client.</string>
+    <string name="about_developer_3">Hope you guys enjoy it :)</string>
+    <string name="contacts_header">Our contacts:</string>
+    <string name="contact_us_email">email:</string>
+    <string name="contact_us_email_real">helpwithapp@gmail.com</string>
+    <string name="contact_us_phone">phone:</string>
+    <string name="contact_us_phone_real">+7 999 999 99-99</string>
+    <string name="contact_us_address">address:</string>
+    <string name="contact_us_address_real">Moscow, Sushevski val street, 21/2</string>
 </resources>

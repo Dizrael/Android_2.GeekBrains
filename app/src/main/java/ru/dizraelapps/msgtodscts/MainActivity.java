@@ -1,10 +1,12 @@
 package ru.dizraelapps.msgtodscts;
 
+import android.app.StatusBarManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
+import android.view.Window;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -110,23 +112,30 @@ public class  MainActivity extends AppCompatActivity implements NavigationView.O
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
+            item.setChecked(true);
+
+
         } else if (id == R.id.nav_slideshow) {
+
+            item.setChecked(true);
 
         } else if (id == R.id.nav_about){
 
             Intent intent2AboutActivity = new Intent(getBaseContext(), AboutUsActivity.class);
             startActivity(intent2AboutActivity);
+            item.setChecked(true);
 
         } else if (id == R.id.nav_contact){
 
             Intent intent2ContactActivity = new Intent(getBaseContext(), ContactUsActivity.class);
             startActivity(intent2ContactActivity);
-
+            item.setChecked(true);
         }
-
+        item.setChecked(false);
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+
         return true;
     }
 }

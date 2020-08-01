@@ -4,17 +4,22 @@ import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.textview.MaterialTextView;
+
+import java.util.Date;
 import java.util.List;
+
+import ru.dizraelapps.msgtodscts.weather.Current;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private List<String> data;
     private Activity activity;
-    private int menuPosition;
 
     public ListAdapter(List<String> data, Activity activity){
         this.data = data;
@@ -34,22 +39,21 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
 
         // Заполнение элементов холдера
-        TextView textElement = holder.getTextElement();
-        textElement.setText(data.get(position));
+        fillHolderItems(holder, position);
 
-        // Определение текущей позиции в списке
-        textElement.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                menuPosition = position;
-                return false;
-            }
-        });
+    }
 
-        // Так регистрируется контекстное меню
-        if (activity != null){
-            activity.registerForContextMenu(textElement);
-        }
+    private void fillHolderItems(@NonNull ViewHolder holder, int position) {
+        MaterialTextView tvDay = holder.getTvDay();
+        MaterialTextView tvData = holder.getTvData();
+        MaterialTextView tvTempDay = holder.getTvTempDay();
+        MaterialTextView tvTempNight = holder.getTvTempNight();
+
+
+        tvDay.setText(String.valueOf(data.get(position)));
+        tvData.setText(String.valueOf(data.get(position)));
+        tvTempDay.setText(String.valueOf(data.get(position)));
+        tvTempNight.setText(String.valueOf(data.get(position)));
     }
 
     @Override
@@ -57,49 +61,44 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         return data == null ? 0 : data.size();
     }
 
-    // Изменение списка
-    // Добавить элемент в список
-    void addItem(String element){
-        data.add(element);
-        notifyItemInserted(data.size()-1);
-    }
-
-    // Заменить элемент в списке
-    void updateItem(String element, int position){
-        data.set(position, element);
-        notifyItemChanged(position);
-    }
-
-    // Удалить элемент из списка
-    void removeItem(int position){
-        data.remove(position);
-        notifyItemRemoved(position);
-    }
-
-    // Очистить список
-    void clearItems(){
-        data.clear();
-        notifyDataSetChanged();
-    }
-
-    public int getMenuPosition() {
-        return menuPosition;
-    }
-
-    //endregion
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView textElement;
+        private MaterialTextView tvDay;
+        private MaterialTextView tvData;
+        private MaterialTextView tvTempDay;
+        private MaterialTextView tvTempNight;
+        private ImageView ivWeatherIcon;
+
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            textElement = itemView.findViewById(R.id.textElement);
+            tvDay = itemView.findViewById(R.id.li_textView_day);
+            tvData = itemView.findViewById(R.id.li_textView_data);
+            tvTempDay = itemView.findViewById(R.id.li_textView_day);
+            tvTempNight = itemView.findViewById(R.id.li_textView_temp_night);
+            ivWeatherIcon = itemView.findViewById(R.id.li_icon_weather);
         }
 
-        public TextView getTextElement() {
-            return textElement;
+        public MaterialTextView getTvDay() {
+            return tvDay;
+        }
+
+        public MaterialTextView getTvData() {
+            return tvData;
+        }
+
+        public MaterialTextView getTvTempDay() {
+            return tvTempDay;
+        }
+
+        public MaterialTextView getTvTempNight() {
+            return tvTempNight;
+        }
+
+        public ImageView getIvWeatherIcon() {
+            return ivWeatherIcon;
         }
     }
 

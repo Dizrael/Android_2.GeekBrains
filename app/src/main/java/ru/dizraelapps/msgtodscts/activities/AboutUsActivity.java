@@ -1,8 +1,10 @@
-package ru.dizraelapps.msgtodscts;
+package ru.dizraelapps.msgtodscts.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
+import ru.dizraelapps.msgtodscts.R;
 
 public class AboutUsActivity extends AppCompatActivity {
 

@@ -11,6 +11,12 @@ public class FeelsLike {
     @SerializedName("night")
     @Expose
     private Double night;
+    @SerializedName("eve")
+    @Expose
+    private Double eve;
+    @SerializedName("morn")
+    @Expose
+    private Double morn;
 
     public Double getDay() {
         return day;
@@ -26,6 +32,22 @@ public class FeelsLike {
 
     public void setNight(Double night) {
         this.night = night;
+    }
+
+    public Double getEve() {
+        return eve;
+    }
+
+    public void setEve(Double eve) {
+        this.eve = eve;
+    }
+
+    public Double getMorn() {
+        return morn;
+    }
+
+    public void setMorn(Double morn) {
+        this.morn = morn;
     }
 
 }

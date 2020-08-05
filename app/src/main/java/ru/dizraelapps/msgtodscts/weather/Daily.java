@@ -6,16 +6,6 @@ import com.google.gson.annotations.SerializedName;
 
 public class Daily {
 
-    public Daily(Integer dt, Temp temp, FeelsLike feelsLike, Integer pressure, Integer humidity, Double windSpeed, List<Weather> weather) {
-        this.dt = dt;
-        this.temp = temp;
-        this.feelsLike = feelsLike;
-        this.pressure = pressure;
-        this.humidity = humidity;
-        this.windSpeed = windSpeed;
-        this.weather = weather;
-    }
-
     @SerializedName("dt")
     @Expose
     private Integer dt;
@@ -48,13 +38,13 @@ public class Daily {
     private Integer windDeg;
     @SerializedName("weather")
     @Expose
-    private List<Weather> weather = null;
+    private List<Weather_> weather = null;
     @SerializedName("clouds")
     @Expose
     private Integer clouds;
     @SerializedName("pop")
     @Expose
-    private Integer pop;
+    private Double pop;
     @SerializedName("uvi")
     @Expose
     private Double uvi;
@@ -142,11 +132,11 @@ public class Daily {
         this.windDeg = windDeg;
     }
 
-    public List<Weather> getWeather() {
+    public List<Weather_> getWeather() {
         return weather;
     }
 
-    public void setWeather(List<Weather> weather) {
+    public void setWeather(List<Weather_> weather) {
         this.weather = weather;
     }
 
@@ -158,11 +148,11 @@ public class Daily {
         this.clouds = clouds;
     }
 
-    public Integer getPop() {
+    public Double getPop() {
         return pop;
     }
 
-    public void setPop(Integer pop) {
+    public void setPop(Double pop) {
         this.pop = pop;
     }
 

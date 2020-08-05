@@ -5,17 +5,24 @@ import com.google.gson.annotations.SerializedName;
 
 public class Temp {
 
-    public Temp(Double day, Double night) {
-        this.day = day;
-        this.night = night;
-    }
-
     @SerializedName("day")
     @Expose
     private Double day;
+    @SerializedName("min")
+    @Expose
+    private Double min;
+    @SerializedName("max")
+    @Expose
+    private Double max;
     @SerializedName("night")
     @Expose
     private Double night;
+    @SerializedName("eve")
+    @Expose
+    private Double eve;
+    @SerializedName("morn")
+    @Expose
+    private Double morn;
 
     public Double getDay() {
         return day;
@@ -25,6 +32,21 @@ public class Temp {
         this.day = day;
     }
 
+    public Double getMin() {
+        return min;
+    }
+
+    public void setMin(Double min) {
+        this.min = min;
+    }
+
+    public Double getMax() {
+        return max;
+    }
+
+    public void setMax(Double max) {
+        this.max = max;
+    }
 
     public Double getNight() {
         return night;
@@ -32,6 +54,22 @@ public class Temp {
 
     public void setNight(Double night) {
         this.night = night;
+    }
+
+    public Double getEve() {
+        return eve;
+    }
+
+    public void setEve(Double eve) {
+        this.eve = eve;
+    }
+
+    public Double getMorn() {
+        return morn;
+    }
+
+    public void setMorn(Double morn) {
+        this.morn = morn;
     }
 
 }

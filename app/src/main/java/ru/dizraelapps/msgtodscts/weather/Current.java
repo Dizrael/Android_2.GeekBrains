@@ -1,18 +1,10 @@
 package ru.dizraelapps.msgtodscts.weather;
 
-
 import java.util.List;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Current {
-
-    public Current(Integer dt, Double temp, Double feelsLike) {
-        this.dt = dt;
-        this.temp = temp;
-        this.feelsLike = feelsLike;
-    }
 
     @SerializedName("dt")
     @Expose
@@ -168,6 +160,5 @@ public class Current {
     public void setWeather(List<Weather> weather) {
         this.weather = weather;
     }
-
 
 }

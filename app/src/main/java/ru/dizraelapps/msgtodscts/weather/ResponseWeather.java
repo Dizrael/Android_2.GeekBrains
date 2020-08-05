@@ -4,11 +4,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Response {
-
-    public Response(List<Daily> daily) {
-        this.daily = daily;
-    }
+public class ResponseWeather {
 
     @SerializedName("lat")
     @Expose
@@ -25,9 +21,6 @@ public class Response {
     @SerializedName("current")
     @Expose
     private Current current;
-    @SerializedName("hourly")
-    @Expose
-    private List<Hourly> hourly = null;
     @SerializedName("daily")
     @Expose
     private List<Daily> daily = null;
@@ -70,15 +63,6 @@ public class Response {
 
     public void setCurrent(Current current) {
         this.current = current;
-    }
-
-
-    public List<Hourly> getHourly() {
-        return hourly;
-    }
-
-    public void setHourly(List<Hourly> hourly) {
-        this.hourly = hourly;
     }
 
     public List<Daily> getDaily() {

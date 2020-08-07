@@ -37,7 +37,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         this.activity = activity;
     }
 
-    //region Переопределение методов адаптера
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -46,11 +45,27 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
 
+        //Получаем данные из data
+        Long dt = (data.get(position).getDt()) * 1000L;
+        Double tempMaxDay = data.get(position).getTemp().getMax();
+        Double tempNight = data.get(position).getTemp().getNight();
+
+        Weather_ weather_ = data.get(position).getWeather().get(0);
+        String iconWeather = weather_.getIcon();
+
         // Заполнение элементов холдера
-        holder.bind(holder, position );
+        holder.bind(dt, tempMaxDay, tempNight, iconWeather);
+
+        holder.itemView.setBackgroundColor(Color.GRAY);
+        if (position == 0){
+            holder.getTvDay().setText("Today");
+        } else if(position == 1){
+            holder.getTvDay().setText("Tomorrow");
+        }
 
     }
 
@@ -69,7 +84,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         private MaterialTextView tvTempNight;
         private ImageView ivWeatherIcon;
 
-
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -81,25 +95,17 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         }
 
         @SuppressLint("SetTextI18n")
-        private void bind(@NonNull ViewHolder holder, int position) {
+        private void bind(Long date, Double tempMaxDay, Double tempNight, String iconWeather) {
 
             @SuppressLint("SimpleDateFormat") DateFormat dfWeekDay = new SimpleDateFormat("EEEE");
             @SuppressLint("SimpleDateFormat") DateFormat dfDate = new SimpleDateFormat("dd MMMM");
 
-            //Получаем наши вью из Холдера
-            MaterialTextView tvDay = holder.getTvDay();
-            MaterialTextView tvData = holder.getTvData();
-            MaterialTextView tvTempDay = holder.getTvTempDay();
-            MaterialTextView tvTempNight = holder.getTvTempNight();
-            ImageView ivWeatherIcon = holder.getIvWeatherIcon();
+            String dateFormat = dfDate.format(date);
+            String weekDayFormat = dfWeekDay.format(date);
+            String temperatureDay = String.valueOf(Math.round(tempMaxDay));
+            String temperatureNight = String.valueOf(Math.round(tempNight));
 
-            Long dt = (data.get(position).getDt()) * 1000L;
-            String dateFormat = dfDate.format(dt);
-            String weekDayFormat = dfWeekDay.format(dt);
-            String temperatureDay = String.valueOf(Math.round(data.get(position).getTemp().getMax()));
-            String temperatureNight = String.valueOf(Math.round(data.get(position).getTemp().getNight()));
-
-            Log.d("DATEEEEEEE", String.valueOf(dt));
+            Log.d("DATEEEEEEE", String.valueOf(date));
             Log.d("DATEEEEEEE", dateFormat);
             Log.d("DATEEEEEEE", weekDayFormat);
 
@@ -109,22 +115,15 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             tvTempDay.setText("+" + temperatureDay + "°");
             tvTempNight.setText("+" + temperatureNight + "°");
 
-            Weather_ weather_ = data.get(position).getWeather().get(0);
 
-            String iconUrl = "http://openweathermap.org/img/wn/" + weather_.
-                    getIcon() + "@2x.png";
+            String iconUrl = "http://openweathermap.org/img/wn/" + iconWeather + "@2x.png";
             Uri iconUri = Uri.parse(iconUrl);
             Picasso.get()
                     .load(iconUri)
                     .into(ivWeatherIcon);
 
-            itemView.setBackgroundColor(Color.GRAY);
-            if (position == 0){
-                tvDay.setText("Today");
-            } else if(position == 1){
-                tvDay.setText("Tomorrow");
-            }
         }
+
 
         public MaterialTextView getTvDay() {
             return tvDay;
@@ -145,6 +144,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         public ImageView getIvWeatherIcon() {
             return ivWeatherIcon;
         }
+
     }
 
 }

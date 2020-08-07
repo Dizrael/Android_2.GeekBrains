@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textview.MaterialTextView;
+import com.squareup.picasso.Picasso;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CharSequence searchableCity;
     private ArrayList<String> latitudeLongitude = new ArrayList<>();
     private RecyclerView recyclerView;
+    private ImageView currentWeatherIcon;
 
     //Инициализируем View внутри RecyclerView
     private MaterialTextView listItemDay;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MaterialTextView listItemTempNight;
     private ImageView listIconWeather;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,7 +94,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = initToolbar();
 
         initDrawer(toolbar);
-//        initList();
         initSensors();
         initRetrofit();
         initHandler();
@@ -135,7 +137,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             initList(weatherData);
 
-
+                            //Сетим иконку текущей погоды на главном экране
+                            currentWeatherIcon = findViewById(R.id.main_im_icon_current_weather);
+                            List<Weather> currentWeatherList = response.body().getCurrent().getWeather();
+                            Weather currentWeather = currentWeatherList.get(0);
+                            String iconCurrentWeather = currentWeather.getIcon();
+                            String iconUrl = "http://openweathermap.org/img/wn/" + iconCurrentWeather + "@4x.png";
+                            Uri iconUri = Uri.parse(iconUrl);
+                            Picasso.get()
+                                    .load(iconUri)
+                                    .into(currentWeatherIcon);
 
                         } else {
                             Log.d("OnResponse", "Server return an error");
@@ -225,14 +236,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         recyclerView.addItemDecoration(new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL));
     }
 
-    private List<Daily> initData() {
-        List<String> list = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            list.add(String.format("Element %d", i));
-        }
-        return null;
-    }
-
     private void initDrawer(Toolbar toolbar) {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -243,13 +246,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
     }
 
-
     private Toolbar initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         return toolbar;
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -272,11 +273,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final String[] latitude = new String[1];
         final String[] longitude = new String[1];
 
-        new Thread(new Runnable() {
+        Thread getGoelocThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Geocoder geocoder = new Geocoder(getBaseContext());
-
                 if (Geocoder.isPresent()) {
                     try {
                         List<Address> addresses = geocoder.getFromLocationName(cityName, 1);
@@ -301,8 +301,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             }
-        }).start();
-
+        });
+        getGoelocThread.start();
     }
 
     private void getWeatherInSearchableCity(SearchView searchText) {

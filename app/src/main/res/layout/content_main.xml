@@ -25,6 +25,7 @@
             android:textSize="55sp"/>
 
         <ImageView
+            android:id="@+id/main_im_icon_current_weather"
             android:layout_width="wrap_content"
             android:layout_height="55dp"
             android:src="@drawable/ic_rv_arrow_forward_24"/>

@@ -15,8 +15,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class InternetConnector {
 
-    HttpsURLConnection urlConnection = null;
-    URL url;
+    private HttpsURLConnection urlConnection = null;
+    private URL url;
 
     public InternetConnector(String city) throws MalformedURLException {
         String KEY = "d4a256e168a940fb210b109445d77de4";

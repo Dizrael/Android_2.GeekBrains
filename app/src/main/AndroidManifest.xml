@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.dizraelapps.msgtodscts">
+    
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -9,7 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-        <activity android:name=".activities.ContactUsActivity"></activity>
+        <activity android:name=".activities.ContactUsActivity" />
         <activity android:name=".activities.AboutUsActivity" />
         <activity
             android:name=".activities.MainActivity"

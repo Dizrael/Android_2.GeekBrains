@@ -24,4 +24,7 @@
     <string name="contact_us_address">address:</string>
     <string name="contact_us_address_real">Moscow, Sushevski val street, 21/2</string>
     <string name="action_search">Search</string>
+    <string name="google_maps_api_key">AIzaSyAl86oNGIJett7ckJZBmbPoaLdVVNlONN4</string>
+    <string name="fragment_current_weather_button">Current weather</string>
+
 </resources>

@@ -30,11 +30,9 @@ import ru.dizraelapps.msgtodscts.weather.Weather_;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private List<Daily> data;
-    private Activity activity;
 
     public ListAdapter(List<Daily> data, Activity activity){
         this.data = data;
-        this.activity = activity;
     }
 
     @NonNull
@@ -105,10 +103,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             String temperatureDay = String.valueOf(Math.round(tempMaxDay));
             String temperatureNight = String.valueOf(Math.round(tempNight));
 
-            Log.d("DATEEEEEEE", String.valueOf(date));
-            Log.d("DATEEEEEEE", dateFormat);
-            Log.d("DATEEEEEEE", weekDayFormat);
-
 
             tvDay.setText(weekDayFormat);
             tvData.setText(dateFormat);
@@ -121,6 +115,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             Picasso.get()
                     .load(iconUri)
                     .into(ivWeatherIcon);
+
+            Log.d("TAG", iconWeather);
 
         }
 

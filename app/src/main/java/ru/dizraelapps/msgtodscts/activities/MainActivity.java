@@ -1,5 +1,6 @@
 package ru.dizraelapps.msgtodscts.activities;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
@@ -7,12 +8,17 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
@@ -24,15 +30,22 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
@@ -40,6 +53,7 @@ import com.squareup.picasso.Picasso;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,11 +62,8 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
@@ -64,8 +75,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import ru.dizraelapps.msgtodscts.ListAdapter;
 import ru.dizraelapps.msgtodscts.R;
-import ru.dizraelapps.msgtodscts.activities.AboutUsActivity;
-import ru.dizraelapps.msgtodscts.activities.ContactUsActivity;
 import ru.dizraelapps.msgtodscts.broadcast.BatteryBroadcastReceiver;
 import ru.dizraelapps.msgtodscts.broadcast.NetworkBroadcastReceiver;
 import ru.dizraelapps.msgtodscts.interfaces.IOpenWeather;
@@ -73,12 +82,16 @@ import ru.dizraelapps.msgtodscts.weather.Daily;
 import ru.dizraelapps.msgtodscts.weather.ResponseWeather;
 import ru.dizraelapps.msgtodscts.weather.Weather;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SensorEventListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+        SensorEventListener{
 
     //Strings
     private final static String NOT_SUPPORTED_MSG = "Sorry, sensor not available for this device";
     private final static String ACTION_SEND_MESSAGE = "ru.dizraelapps.msgtodscts.message";
     private final static String NAME_MSG = "MSG";
+    private final static String units = "metric";
+    private final static String exclude = "minutely,hourly";
+    private final static String apiKey = "d4a256e168a940fb210b109445d77de4";
     private CharSequence searchableCity;
 
     //View
@@ -86,8 +99,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ImageView currentWeatherIcon;
     private TextView ambientTempLabel;
     private TextView ambientHumidLabel;
+    private Button currentWeatherButton;
+    private MapView mapView;
+    private GoogleMap gMap;
 
     public static final int FLAG_RECEIVER_INCLUDE_BACKGROUND = 0x01000000;
+    private static final int PERMISSION_REQUEST_CODE = 10;
+    private Activity activity;
     private NetworkBroadcastReceiver networkBroadcastReceiver;
     private BatteryBroadcastReceiver batteryBroadcastReceiver;
     private Handler mHandler;
@@ -103,8 +121,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = initToolbar();
 
+        checkPermissions();
+
+        Toolbar toolbar = initToolbar();
         initDrawer(toolbar);
         initSensors();
         initRetrofit();
@@ -112,6 +132,72 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initBroadcastReceivers();
         initGetToken();
         initNotificationChannel();
+        initView();
+    }
+
+    private void checkPermissions() {
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE)) {
+            // Запрашиваем эти два Permission’а у пользователя
+            ActivityCompat.requestPermissions(this,
+                    new String[]{
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                    },
+                    PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    private void initView() {
+        mapView = findViewById(R.id.map);
+        currentWeatherButton = findViewById(R.id.fragment_current_weather_button);
+        initListeners();
+    }
+
+    private void initListeners() {
+        Context context = this.getBaseContext();
+        currentWeatherButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.R)
+            @SuppressLint("ShowToast")
+            @Override
+            public void onClick(View view) {
+
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                {
+                    LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    Criteria criteria = new Criteria();
+                    criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+                    String provider = manager.getBestProvider(criteria, true);
+                    if (provider != null) {
+
+                        manager.requestSingleUpdate(provider, new LocationListener() {
+                            @Override
+                            public void onLocationChanged(@NonNull Location location) {
+                                String longitude = String.valueOf(location.getLongitude());
+                                String latitude = String.valueOf(location.getLatitude());
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        requestRetrofit(latitude, longitude, exclude, apiKey, units);
+                                    }
+                                }).start();
+//                                mHandler.post(() -> mapView.getMapAsync((GoogleMap) -> {
+//                                    GoogleMap googleMap = gMap;
+//                                    LatLng position = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+//                                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(position,15);
+//                                    googleMap.animateCamera(cameraUpdate);
+//                                    googleMap.addMarker(new MarkerOptions().position(position).title("Current position"));
+//
+//                                }));
+                            }
+                        }, Looper.getMainLooper());
+
+                    } else {
+                        Toast.makeText(getParent(), "Включите GPS", Toast.LENGTH_SHORT);
+                    }
+                }
+            }
+        });
     }
 
 
@@ -376,16 +462,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 //Получаем координаты введенного города
                 sendWeatherRequest(String.valueOf(searchableCity));
 
-                MaterialTextView listItemDay = findViewById(R.id.li_textView_day);
-                MaterialTextView listItemData = findViewById(R.id.li_textView_data);
-                MaterialTextView listItemTempDay = findViewById(R.id.li_textView_temp_day);
-                MaterialTextView listItemTempNight = findViewById(R.id.li_textView_temp_night);
-                ImageView listIconWeather = findViewById(R.id.li_icon_weather);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            Thread.sleep(3000);
+                            Thread.sleep(5000);
                             mHandler.post(() -> {
                                 if (latitudeLongitude.get(0) != null && latitudeLongitude.get(1) != null) {
                                     String latitude = latitudeLongitude.get(0);
@@ -450,8 +531,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         unregisterReceiver(networkBroadcastReceiver);
         unregisterReceiver(batteryBroadcastReceiver);
     }

@@ -115,9 +115,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             Picasso.get()
                     .load(iconUri)
                     .into(ivWeatherIcon);
-
-            Log.d("TAG", iconWeather);
-
         }
 
 

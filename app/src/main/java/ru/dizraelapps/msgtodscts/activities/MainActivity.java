@@ -5,9 +5,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SearchRecentSuggestionsProvider;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -26,6 +29,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.PersistableBundle;
+import android.provider.SearchRecentSuggestions;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
@@ -36,13 +42,8 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -77,6 +78,11 @@ import ru.dizraelapps.msgtodscts.ListAdapter;
 import ru.dizraelapps.msgtodscts.R;
 import ru.dizraelapps.msgtodscts.broadcast.BatteryBroadcastReceiver;
 import ru.dizraelapps.msgtodscts.broadcast.NetworkBroadcastReceiver;
+import ru.dizraelapps.msgtodscts.database.App;
+import ru.dizraelapps.msgtodscts.database.RecentSearchQueryProvider;
+import ru.dizraelapps.msgtodscts.database.SearchHistoryViewModel;
+import ru.dizraelapps.msgtodscts.database.SearchHistoryDao;
+import ru.dizraelapps.msgtodscts.database.SearchText;
 import ru.dizraelapps.msgtodscts.interfaces.IOpenWeather;
 import ru.dizraelapps.msgtodscts.weather.Daily;
 import ru.dizraelapps.msgtodscts.weather.ResponseWeather;
@@ -102,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Button currentWeatherButton;
     private MapView mapView;
     private GoogleMap gMap;
+    private TextView currentTempTextView;
 
     public static final int FLAG_RECEIVER_INCLUDE_BACKGROUND = 0x01000000;
     private static final int PERMISSION_REQUEST_CODE = 10;
@@ -116,12 +123,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Sensor mHumidity;
     private IOpenWeather openWeather;
     private ArrayList<String> latitudeLongitude = new ArrayList<>();
+    private SearchHistoryViewModel searchHistoryViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent = getIntent();
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                    RecentSearchQueryProvider.AUTHORITY, RecentSearchQueryProvider.MODE);
+            suggestions.saveRecentQuery(query, null);
+        }
         checkPermissions();
 
         Toolbar toolbar = initToolbar();
@@ -133,6 +148,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initGetToken();
         initNotificationChannel();
         initView();
+        initDatabase();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                    RecentSearchQueryProvider.AUTHORITY, RecentSearchQueryProvider.MODE);
+            suggestions.saveRecentQuery(query, null);
+        }
+    }
+
+    private void initDatabase() {
+        SearchHistoryDao searchHistoryDao = App
+                .getInstance()
+                .getHistoryDao();
+        searchHistoryViewModel = new SearchHistoryViewModel(searchHistoryDao);
     }
 
     private void checkPermissions() {
@@ -147,7 +181,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    //inits
+
     private void initView() {
+        currentTempTextView = findViewById(R.id.main_tv_current_temp);
         mapView = findViewById(R.id.map);
         currentWeatherButton = findViewById(R.id.fragment_current_weather_button);
         initListeners();
@@ -200,8 +237,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-
-    //inits
     private void initBroadcastReceivers() {
         batteryBroadcastReceiver = new BatteryBroadcastReceiver();
         networkBroadcastReceiver = new NetworkBroadcastReceiver();
@@ -348,12 +383,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         mSensorManager.registerListener(mSensorListener, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(mSensorListener, mHumidity, SensorManager.SENSOR_DELAY_NORMAL);
+
+        SharedPreferences preferences = getSharedPreferences("MyPref", MODE_PRIVATE);
+        String currentTemp = preferences.getString("currentTemp", "");
+        currentTempTextView.setText(currentTemp);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(mSensorListener);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     @Override
@@ -365,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initList(List<Daily> weatherData) {
-        RecyclerView recyclerView = findViewById(R.id.recycler_list);
+        recyclerView = findViewById(R.id.recycler_list);
 
         // Эта установка служит для повышения производительности системы
         recyclerView.setHasFixedSize(true);
@@ -402,12 +446,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getMenuInflater().inflate(R.menu.main, menu);
 
         //Находим нашу SearchView и вешаем слушатель ввода текста
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         MenuItem search = menu.findItem(R.id.action_search);
         final SearchView searchText = (SearchView) search.getActionView();
+        searchText.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchText.setQueryHint("Type city here");
-        getWeatherInSearchableCity(searchText);     //Получаем введенный пользователем
-        //город
 
+        //Получаем введенный пользователем город
+        getWeatherInSearchableCity(searchText);
         return true;
     }
 
@@ -450,12 +496,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getWeatherInSearchableCity(SearchView searchText) {
-
         // Вешаем листнер на нашу строку ввода города
         searchText.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 searchableCity = query;
+                searchHistoryViewModel.addSearch(new SearchText(String.valueOf(searchableCity)));
+
+
                 searchText.clearFocus();
                 Log.d("CITY", String.valueOf(searchableCity));
 
@@ -484,7 +532,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }).start();
                 return true;
-
             }
 
             @Override
@@ -535,5 +582,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStop();
         unregisterReceiver(networkBroadcastReceiver);
         unregisterReceiver(batteryBroadcastReceiver);
+
+        saveCurrentTemperature();
+
+    }
+
+    private void saveCurrentTemperature() {
+        String currentTemp = String.valueOf(currentTempTextView.getText());
+        SharedPreferences preferences = getSharedPreferences("MyPref", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("currentTemp", currentTemp);
+        editor.apply();
     }
 }
